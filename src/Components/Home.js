@@ -3,6 +3,7 @@ import Post from './Post';
 import { auth, db } from './firebase'
 import { Box, Button, Modal, Input } from '@mui/material'
 import ImageUpload from './ImageUpload';
+import Footer from './footer';
 
 const style = {
   position: 'absolute',
@@ -19,13 +20,17 @@ const style = {
 
 function App() {
   const [posts, setPosts] = useState([])
+  
   const [open, setOpen] = useState(false);
   const [openSignIn, setOpenSignIn] = useState(false)
+  const [openUpload, setOpenUpload] = useState(false)
+
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [user, setUser] = useState(null)
-  const [openUpload, setOpenUpload] = useState(false)
+  const [myPosts, setMyPosts] = useState(null)
+  
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
@@ -38,23 +43,34 @@ function App() {
         // user has logged out...
         setUser(null)
       }
-
       return () => {
         // perform some cleanup actions 
         unsubscribe()
       }
-
     })
   }, [user, username])
 
   useEffect(() => {
-    db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-      setPosts(snapshot.docs.map(doc => ({
-        id: doc.id,
-        post: doc.data()
-      })))
-    })
-  }, [posts])
+    if (!myPosts || !user){
+      db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+        setPosts(snapshot.docs.map(doc => ({
+          id: doc.id,
+          post: doc.data()
+        })))
+      })
+    } else {
+      db.collection('posts')
+      .where("username", "==", user.displayName)
+      .orderBy('timestamp', 'desc')
+      .onSnapshot(snapshot => {
+        setPosts(snapshot.docs.map(doc => ({
+          id: doc.id,
+          post: doc.data()
+        })))
+      })
+    }
+    console.log(user)
+  }, [myPosts])
 
   const signUp = (event) => {
     event.preventDefault()
@@ -78,6 +94,11 @@ function App() {
     .catch((err) => alert(err.message))
 
     setOpenSignIn(false)
+  }
+
+  const logout = (event) => {
+    auth.signOut()
+    setMyPosts(false)
   }
 
   return (
@@ -166,8 +187,11 @@ function App() {
         </div>
         {user ? (
           <div className="app_loggedInContainer">
+            {!myPosts ? 
+            <Button onClick={() => setMyPosts(true)}>My Posts</Button>
+          : <Button onClick={() => setMyPosts(false)}>All Posts</Button>}
             <Button onClick={() => setOpenUpload(true)}>New Post</Button>
-            <Button onClick={() => auth.signOut()}>Logout</Button>
+            <Button onClick={logout}>Logout</Button>
           </div>
         ) : (
           <div className="app_loginContainer">
@@ -193,7 +217,7 @@ function App() {
         }
 
       </div>
-
+      <Footer />
     </div>
   );
 }

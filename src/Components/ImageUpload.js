@@ -2,11 +2,10 @@ import { Button } from '@mui/material'
 import React, { useState } from 'react'
 import firebase from 'firebase/compat/app';
 import { storage, db } from "./firebase"
-import './ImageUpload.css'
+import './assets/css/ImageUpload.css'
 
 function ImageUpload({ username }) {
     const [image, setImage] = useState(null)
-    // const [url, setUrl] = useState("")
     const [progress, setProgress] = useState(0)
     const [caption, setCaption] = useState("")
     const [msg, setMsg] = useState("")

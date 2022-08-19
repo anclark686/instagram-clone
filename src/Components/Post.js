@@ -1,5 +1,5 @@
 import React, {useState, useEffect } from 'react'
-import "./Post.css"
+import "./assets/css/Post.css"
 import { Avatar } from '@mui/material'
 import { db } from './firebase'
 import firebase from 'firebase/compat/app';
@@ -17,7 +17,10 @@ function Post({ postId, user, username, caption, imageUrl}) {
                 .collection("comments")
                 .orderBy('timestamp', "desc")
                 .onSnapshot((snapshot) => {
-                    setComments(snapshot.docs.map((doc) => doc.data()))
+                    setComments(snapshot.docs.map((doc) => ({
+                        id: doc.id,
+                        comment: doc.data()
+                    })))
                 })
         }
 
@@ -56,8 +59,8 @@ function Post({ postId, user, username, caption, imageUrl}) {
             <h4 className="post_text"><strong>{username} </strong> {caption}</h4>
         
             <div className="post_comments">
-                {comments.map((comment) => (
-                    <p>
+                {comments.map(({id, comment}) => (
+                    <p key={id}>
                         <strong>{comment.username}</strong> {comment.text}
                     </p>
                 ))}
